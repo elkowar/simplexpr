@@ -191,8 +191,8 @@ impl SimplExpr {
                 }
             }
             SimplExpr::FunctionCall(span, function_name, args) => {
-                let args = args.into_iter().map(|a| a.eval(values)).collect::<Result<_, EvalError>>()?;
-                call_expr_function(&function_name, args).map_err(|e| e.at(*span))
+                let args = args.iter().map(|a| a.eval(values)).collect::<Result<_, EvalError>>()?;
+                call_expr_function(function_name, args).map_err(|e| e.at(*span))
             }
         };
         Ok(value?.at(span))
@@ -214,7 +214,7 @@ fn call_expr_function(name: &str, args: Vec<DynVal>) -> Result<DynVal, EvalError
                 let string = string.as_string()?;
                 let pattern = regex::Regex::new(&pattern.as_string()?)?;
                 let replacement = replacement.as_string()?;
-                Ok(DynVal::from(pattern.replace_all(&string, replacement.replace("$", "$$").replace("\\", "$")).into_owned()))
+                Ok(DynVal::from(pattern.replace_all(&string, replacement.replace('$', "$$").replace('\\', "$")).into_owned()))
             }
             _ => Err(EvalError::WrongArgCount(name.to_string())),
         },
