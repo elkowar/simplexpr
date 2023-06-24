@@ -1,5 +1,4 @@
 #![feature(box_patterns)]
-#![feature(box_syntax)]
 #![feature(try_blocks)]
 pub mod ast;
 pub mod dynval;

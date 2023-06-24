@@ -61,10 +61,10 @@ impl SimplExpr {
     pub fn map_terminals_into(self, f: impl Fn(Self) -> Self) -> Self {
         use SimplExpr::*;
         match self {
-            BinOp(span, box a, op, box b) => BinOp(span, box f(a), op, box f(b)),
-            UnaryOp(span, op, box a) => UnaryOp(span, op, box f(a)),
-            IfElse(span, box a, box b, box c) => IfElse(span, box f(a), box f(b), box f(c)),
-            JsonAccess(span, box a, box b) => JsonAccess(span, box f(a), box f(b)),
+            BinOp(span, box a, op, box b) => BinOp(span, Box::new(f(a)), op, Box::new(f(b))),
+            UnaryOp(span, op, box a) => UnaryOp(span, op, Box::new(f(a))),
+            IfElse(span, box a, box b, box c) => IfElse(span, Box::new(f(a)), Box::new(f(b)), Box::new(f(c))),
+            JsonAccess(span, box a, box b) => JsonAccess(span, Box::new(f(a)), Box::new(f(b))),
             FunctionCall(span, name, args) => FunctionCall(span, name, args.into_iter().map(f).collect()),
             other => f(other),
         }
@@ -76,13 +76,13 @@ impl SimplExpr {
         match self {
             // Literal(x) => Ok(Literal(AttrValue::from_primitive(x.resolve_fully(&variables)?))),
             Literal(span, x) => Ok(Literal(span, x)),
-            BinOp(span, box a, op, box b) => Ok(BinOp(span, box a.resolve_refs(variables)?, op, box b.resolve_refs(variables)?)),
-            UnaryOp(span, op, box x) => Ok(UnaryOp(span, op, box x.resolve_refs(variables)?)),
+            BinOp(span, box a, op, box b) => Ok(BinOp(span, Box::new(a.resolve_refs(variables)?), op, Box::new(b.resolve_refs(variables)?))),
+            UnaryOp(span, op, box x) => Ok(UnaryOp(span, op, Box::new(x.resolve_refs(variables)?))),
             IfElse(span, box a, box b, box c) => {
-                Ok(IfElse(span, box a.resolve_refs(variables)?, box b.resolve_refs(variables)?, box c.resolve_refs(variables)?))
+                Ok(IfElse(span, Box::new(a.resolve_refs(variables)?), Box::new(b.resolve_refs(variables)?), Box::new(c.resolve_refs(variables)?)))
             }
             JsonAccess(span, box a, box b) => {
-                Ok(JsonAccess(span, box a.resolve_refs(variables)?, box b.resolve_refs(variables)?))
+                Ok(JsonAccess(span, Box::new(a.resolve_refs(variables)?), Box::new(b.resolve_refs(variables)?)))
             }
             FunctionCall(span, function_name, args) => Ok(FunctionCall(
                 span,
